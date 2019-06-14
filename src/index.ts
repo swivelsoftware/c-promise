@@ -50,9 +50,14 @@ export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResp
 
   constructor(config: AxiosRequestConfig, axiosInstance: AxiosInstance = axios.create()) {
     super(async (resolve, reject) => {
-      const response = await axiosInstance.request(config)
-      if (!response) return reject(new CancelError())
-      return resolve(response)
+      try {
+        const response = await axiosInstance.request(config)
+        if (!response) return reject(new CancelError())
+        return resolve(response)
+      }
+      catch (e) {
+        return reject(e)
+      }
     })
     this.cancelTokenSource = axios.CancelToken.source()
     config.cancelToken = this.cancelTokenSource.token
