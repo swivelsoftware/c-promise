@@ -1,0 +1,43 @@
+{
+  "name": "@kennysng/c-promise",
+  "version": "1.1.0",
+  "description": "Cancelable Promise",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "lint": "tslint -p tsconfig.json",
+    "build": "npm run lint && tsc && ts-node script/remove-tsd",
+    "prepublishOnly": "npm i && npm run build",
+    "dist": "npm publish --access=public",
+    "postpublish": "rm package-lock.json && rimraf dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://kennysng@github.com/kennysng/c-promise.git"
+  },
+  "author": "Kennys Ng <kennysng@hotmail.com.hk>",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/kennysng/c-promise/issues"
+  },
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://github.com/kennysng/c-promise#readme",
+  "devDependencies": {
+    "@types/event-stream": "^3.3.34",
+    "@types/minimist": "^1.2.0",
+    "@types/node": "^12.0.8",
+    "@types/recursive-readdir": "^2.2.0",
+    "event-stream": "^4.0.1",
+    "minimist": "^1.2.0",
+    "recursive-readdir": "^2.2.2",
+    "rimraf": "^2.6.3",
+    "ts-node": "^8.2.0",
+    "tslint": "^5.17.0",
+    "typescript": "^3.5.1"
+  },
+  "dependencies": {
+    "axios": "^0.19.0"
+  }
+}
