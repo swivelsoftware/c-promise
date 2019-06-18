@@ -49,16 +49,17 @@ export class CancelablePromise<T = any> extends EventEmitter implements Promise<
 }
 
 export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResponse<T>> {
-  private readonly cancelTokenSource: CancelTokenSource
+  private readonly cancelTokenSource: CancelTokenSource = axios.CancelToken.source()
 
   constructor(config: AxiosRequestConfig, axiosInstance: AxiosInstance = axios.create()) {
     super((resolve, reject) => {
-      axiosInstance.request(config)
+      axiosInstance.request({
+        ...config,
+        cancelToken: this.cancelTokenSource.token,
+      })
         .then(response => response ? resolve(response) : reject(new CancelError()))
         .catch(e => reject(e))
     })
-    this.cancelTokenSource = axios.CancelToken.source()
-    config.cancelToken = this.cancelTokenSource.token
   }
 
   // @override
