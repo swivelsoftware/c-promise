@@ -56,7 +56,7 @@ export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResp
         cancelToken: cancelTokenSource.token,
       })
         .then(response => response ? resolve(response) : reject(new CancelError()))
-        .catch(e => reject(e))
+        .catch(e => reject(e.constructor.name === 'Cancel' ? new CancelError() : e))
     })
   }
 
