@@ -52,15 +52,10 @@ export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResp
   private readonly cancelTokenSource: CancelTokenSource
 
   constructor(config: AxiosRequestConfig, axiosInstance: AxiosInstance = axios.create()) {
-    super(async (resolve, reject) => {
-      try {
-        const response = await axiosInstance.request(config)
-        if (!response) return reject(new CancelError())
-        return resolve(response)
-      }
-      catch (e) {
-        return reject(e)
-      }
+    super((resolve, reject) => {
+      axiosInstance.request(config)
+        .then(response => response ? resolve(response) : reject(new CancelError()))
+        .catch(e => reject(e))
     })
     this.cancelTokenSource = axios.CancelToken.source()
     config.cancelToken = this.cancelTokenSource.token
