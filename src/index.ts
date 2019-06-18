@@ -1,13 +1,15 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelTokenSource } from 'axios'
+import EventEmitter from 'wolfy87-eventemitter'
 import { CancelError } from './error'
 
-export class CancelablePromise<T = any> implements Promise<T> {
+export class CancelablePromise<T = any> extends EventEmitter implements Promise<T> {
   private resolve_: (value?: T | PromiseLike<T>) => void
   private reject_: (reason?: any) => void
   private readonly promise: Promise<T>
   private canceled: boolean = false
 
   constructor(fn: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, checkCancel: () => void) => void) {
+    super()
     this.promise = new Promise((resolve, reject) => fn(resolve, reject, () => {
       if (this.canceled) throw new CancelError()
     }))
@@ -34,6 +36,7 @@ export class CancelablePromise<T = any> implements Promise<T> {
 
   public cancel(): void {
     this.canceled = true
+    this.emit('cancel')
   }
 
   public resolve(value?: T | PromiseLike<T>): void {
@@ -66,6 +69,7 @@ export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResp
   // @override
   public cancel(): void {
     this.cancelTokenSource.cancel()
+    this.emit('cancel')
   }
 }
 
