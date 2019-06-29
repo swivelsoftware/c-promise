@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelTokenSource } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import EventEmitter from 'wolfy87-eventemitter'
 import { CancelError } from './error'
 
@@ -8,11 +8,16 @@ export class CancelablePromise<T = any> extends EventEmitter implements Promise<
   private readonly promise: Promise<T>
   private canceled: boolean = false
 
-  constructor(fn: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, checkCancel: () => void) => void) {
+  constructor(fn: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void) {
     super()
-    this.promise = new Promise((resolve, reject) => fn(resolve, reject, () => {
-      if (this.canceled) throw new CancelError()
-    }))
+    this.promise = new Promise((resolve, reject) => fn(resolve, reject,
+      () => {
+        if (this.canceled) throw new CancelError()
+      },
+      () => {
+        this.emit('canceled')
+      },
+    ))
   }
 
   get [Symbol.toStringTag](): string {
