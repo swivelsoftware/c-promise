@@ -2,6 +2,14 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import EventEmitter from 'wolfy87-eventemitter'
 import { CancelError } from './error'
 
+export type HandlePromiseFn<T> = (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void
+
+export type OverridePromiseFn<T, U> = (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void
+
+export type CreatePromiseFn<T> = () => CancelablePromise<T>
+
+export type OverrideCreatePromiseFn<T, U> = (createPromise: CreatePromiseFn<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void
+
 /**
  * Promise than can be canceled
  */
@@ -12,31 +20,55 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
   /**
    * @param fn [Function]
    */
-  constructor(fn: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void)
+  constructor(fn: HandlePromiseFn<T>)
 
   /**
    * Wrap another CancelablePromise
-   * @param promise [CancelPromise]
+   * @param promise [CancelablePromise]
    * @param fn [Function]
    */
-  constructor(promise: CancelablePromise<U>, fn: (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void)
+  constructor(promise: CancelablePromise<U>, fn: OverridePromiseFn<T, U>)
+
+  /**
+   * Wrap another CancelablePromise
+   * @param createPromise [Function]
+   * @param fn [Function]
+   */
+  constructor(createPromise: CreatePromiseFn<U>, fn: OverrideCreatePromiseFn<T, U>)
 
   constructor(...args: any[]) {
     super()
-    if (args.length === 2) {
-      const promise: CancelablePromise<U> = args[0], fn: (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void = args[1]
-      this.on('cancel', () => promise.cancel())
-      this.promise = new Promise((resolve, reject) => fn(promise, resolve, reject,
+    if (args.length === 2 && typeof args[0] === 'function') {
+      const createPromise: CreatePromiseFn<U> = args[0], fn: OverrideCreatePromiseFn<T, U> = args[1]
+      this.promise = new Promise((resolve, reject) => fn(
+        () => {
+          const promise = createPromise()
+          this.on('cancel', () => promise.cancel())
+          return promise
+        },
+        resolve,
+        reject,
         () => {
           if (this.canceled) throw new CancelError()
         },
+        () => this.emit('canceled'),
+      ))
+    }
+    else if (args.length === 2) {
+      const promise: CancelablePromise<U> = args[0], fn: OverridePromiseFn<T, U> = args[1]
+      this.on('cancel', () => promise.cancel())
+      this.promise = new Promise((resolve, reject) => fn(
+        promise,
+        resolve,
+        reject,
         () => {
-          this.emit('canceled')
+          if (this.canceled) throw new CancelError()
         },
+        () => this.emit('canceled'),
       ))
     }
     else {
-      const fn: (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void = args[0]
+      const fn: HandlePromiseFn<T> = args[0]
       this.promise = new Promise((resolve, reject) => fn(resolve, reject,
         () => {
           if (this.canceled) throw new CancelError()
