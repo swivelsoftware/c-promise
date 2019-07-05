@@ -1,6 +1,6 @@
 {
   "name": "@kennysng/c-promise",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "Cancelable Promise",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,17 +27,18 @@
   "devDependencies": {
     "@types/event-stream": "^3.3.34",
     "@types/minimist": "^1.2.0",
-    "@types/node": "^12.0.8",
+    "@types/node": "^12.0.12",
     "@types/recursive-readdir": "^2.2.0",
     "event-stream": "^4.0.1",
     "minimist": "^1.2.0",
     "recursive-readdir": "^2.2.2",
     "rimraf": "^2.6.3",
-    "ts-node": "^8.2.0",
-    "tslint": "^5.17.0",
-    "typescript": "^3.5.1"
+    "ts-node": "^8.3.0",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.2"
   },
   "dependencies": {
-    "axios": "^0.19.0"
+    "axios": "^0.19.0",
+    "wolfy87-eventemitter": "^5.2.6"
   }
 }
