@@ -5,12 +5,12 @@ import { CancelError } from './error'
 /**
  * Promise function for cancelable promise
  */
-export type HandlePromiseFn<T> = (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void|Promise<void>
+export type HandlePromiseFn<T> = (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
 
 /**
  * Promise function in case overriding a cancelable promise
  */
-export type OverridePromiseFn<T, U> = (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void|Promise<void>
+export type OverridePromiseFn<T, U> = (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
 
 /**
  * Create function in case overriding a cancelable promise
@@ -21,12 +21,14 @@ export type CreatePromiseFn<T> = () => CancelablePromise<T>
 /**
  * Promise function in case overriding a cancelable promise
  */
-export type OverrideCreatePromiseFn<T, U> = (createPromise: CreatePromiseFn<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void|Promise<void>
+export type OverrideCreatePromiseFn<T, U> = (createPromise: CreatePromiseFn<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
 
 /**
  * Promise than can be canceled
  */
 export class CancelablePromise<T = any, U = any> extends EventEmitter implements Promise<T> {
+  public static onCheck?: () => Promise<void>
+
   private resolve_: (value?: T | PromiseLike<T>) => void
   private reject_: (reason?: any) => void
   private readonly promise: Promise<T>
@@ -67,7 +69,8 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
             },
             resolve,
             reject,
-            () => {
+            async () => {
+              if (CancelablePromise.onCheck) await CancelablePromise.onCheck()
               if (this.canceled) throw new CancelError()
             },
             () => this.emit('canceled'),
@@ -89,7 +92,8 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
             promise,
             resolve,
             reject,
-            () => {
+            async () => {
+              if (CancelablePromise.onCheck) await CancelablePromise.onCheck()
               if (this.canceled) throw new CancelError()
             },
             () => this.emit('canceled'),
@@ -107,12 +111,11 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
           this.resolve_ = resolve
           this.reject_ = reject
           await fn(resolve, reject,
-            () => {
+            async () => {
+              if (CancelablePromise.onCheck) await CancelablePromise.onCheck()
               if (this.canceled) throw new CancelError()
             },
-            () => {
-              this.emit('canceled')
-            },
+            () => this.emit('canceled'),
           )
         }
         catch (e) {

@@ -1,6 +1,6 @@
 {
   "name": "@kennysng/c-promise",
-  "version": "1.2.3",
+  "version": "1.4.0",
   "description": "Cancelable Promise",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

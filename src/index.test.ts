@@ -1,20 +1,31 @@
-import { TIMEOUT } from 'dns'
 import { CancelableAxiosPromise, CancelablePromise } from '.'
 import { CancelError } from './error'
 
-test('Create cancelable promise', async callback => {
-  const promise = new CancelablePromise((resolve, reject, check) => {
+function asyncTask(check: () => void): Promise<void> {
+  return new Promise((resolve, reject) => {
     let tick = 0
-    setInterval(() => {
+    setInterval(async () => {
       try {
-        check()
+        await check()
         tick += 1
-        if (tick === 10) return resolve()
+        if (tick === 20) return resolve()
       }
       catch (e) {
         return reject(e)
       }
-    }, 100)
+    }, 10)
+  })
+}
+
+test('Create cancelable promise', async callback => {
+  const promise = new CancelablePromise(async (resolve, reject, check) => {
+    try {
+      await asyncTask(check)
+      return resolve()
+    }
+    catch (e) {
+      return reject(e)
+    }
   })
   try {
     setTimeout(() => promise.cancel(), 50)
