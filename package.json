@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
+    "test": "jest",
     "lint": "tslint -p tsconfig.json",
     "build": "npm run lint && tsc && ts-node script/remove-tsd",
     "prepublishOnly": "npm i && npm run build",
@@ -27,12 +28,15 @@
   "devDependencies": {
     "@types/event-stream": "^3.3.34",
     "@types/minimist": "^1.2.0",
+    "@types/jest": "^24.0.15",
     "@types/node": "^12.6.2",
     "@types/recursive-readdir": "^2.2.0",
     "event-stream": "^4.0.1",
+    "jest": "^24.8.0",
     "minimist": "^1.2.0",
     "recursive-readdir": "^2.2.2",
     "rimraf": "^2.6.3",
+    "ts-jest": "^24.0.2",
     "ts-node": "^8.3.0",
     "tslint": "^5.18.0",
     "typescript": "^3.5.3"
