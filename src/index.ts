@@ -1,19 +1,50 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import EventEmitter from 'wolfy87-eventemitter'
-import { CancelError } from './error'
 
-export type HandlePromiseFn<T> = (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void
+/**
+ * Throw when promise is canceled
+ */
+export class CancelError extends Error {
+  constructor() {
+    super('CANCELED')
+  }
+}
 
-export type OverridePromiseFn<T, U> = (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void
+/**
+ * Sleep for a period of time
+ * @param time [number] optional
+ */
+export function sleep(time = 0): Promise<void> {
+  return new Promise(resolve => setTimeout(() => resolve(), time))
+}
 
+/**
+ * Promise function for cancelable promise
+ */
+export type HandlePromiseFn<T> = (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
+
+/**
+ * Promise function in case overriding a cancelable promise
+ */
+export type OverridePromiseFn<T, U> = (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
+
+/**
+ * Create function in case overriding a cancelable promise
+ * so that the overriden promise will not run immediately
+ */
 export type CreatePromiseFn<T> = () => CancelablePromise<T>
 
-export type OverrideCreatePromiseFn<T, U> = (createPromise: CreatePromiseFn<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void
+/**
+ * Promise function in case overriding a cancelable promise
+ */
+export type OverrideCreatePromiseFn<T, U> = (createPromise: CreatePromiseFn<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
 
 /**
  * Promise than can be canceled
  */
 export class CancelablePromise<T = any, U = any> extends EventEmitter implements Promise<T> {
+  private resolve_: (value?: T | PromiseLike<T>) => void
+  private reject_: (reason?: any) => void
   private readonly promise: Promise<T>
   private canceled: boolean = false
 
@@ -33,6 +64,7 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
    * Wrap another CancelablePromise
    * @param createPromise [Function]
    * @param fn [Function]
+   * @param onCheck [Function] optional
    */
   constructor(createPromise: CreatePromiseFn<U>, fn: OverrideCreatePromiseFn<T, U>)
 
@@ -40,43 +72,71 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
     super()
     if (args.length === 2 && typeof args[0] === 'function') {
       const createPromise: CreatePromiseFn<U> = args[0], fn: OverrideCreatePromiseFn<T, U> = args[1]
-      this.promise = new Promise((resolve, reject) => fn(
-        () => {
-          const promise = createPromise()
-          this.on('cancel', () => promise.cancel())
-          return promise
-        },
-        resolve,
-        reject,
-        () => {
-          if (this.canceled) throw new CancelError()
-        },
-        () => this.emit('canceled'),
-      ))
+      this.promise = new Promise(async (resolve, reject) => {
+        try {
+          this.resolve_ = resolve
+          this.reject_ = reject
+          await fn(
+            () => {
+              const promise = createPromise()
+              this.on('cancel', () => promise.cancel())
+              return promise
+            },
+            resolve,
+            reject,
+            async () => {
+              await sleep()
+              if (this.canceled) throw new CancelError()
+            },
+            () => this.emit('canceled'),
+          )
+        }
+        catch (e) {
+          return reject(e)
+        }
+      })
     }
     else if (args.length === 2) {
       const promise: CancelablePromise<U> = args[0], fn: OverridePromiseFn<T, U> = args[1]
       this.on('cancel', () => promise.cancel())
-      this.promise = new Promise((resolve, reject) => fn(
-        promise,
-        resolve,
-        reject,
-        () => {
-          if (this.canceled) throw new CancelError()
-        },
-        () => this.emit('canceled'),
-      ))
+      this.promise = new Promise(async (resolve, reject) => {
+        try {
+          this.resolve_ = resolve
+          this.reject_ = reject
+          await fn(
+            promise,
+            resolve,
+            reject,
+            async () => {
+              await sleep()
+              if (this.canceled) throw new CancelError()
+            },
+            () => this.emit('canceled'),
+          )
+        }
+        catch (e) {
+          return reject(e)
+        }
+      })
     }
     else {
       const fn: HandlePromiseFn<T> = args[0]
-      this.promise = new Promise((resolve, reject) => fn(resolve, reject,
-        () => {
-          if (this.canceled) throw new CancelError()
-        },
-        () => {
-          this.emit('canceled')
-        },
-      ))
+      this.promise = new Promise(async (resolve, reject) => {
+        try {
+          this.resolve_ = resolve
+          this.reject_ = reject
+          await fn(resolve, reject,
+            async () => {
+              await sleep()
+              if (this.canceled) throw new CancelError()
+            },
+            () => this.emit('canceled'),
+          )
+        }
+        catch (e) {
+          return reject(e)
+        }
+      })
     }
   }
 
@@ -102,6 +162,14 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
     return this.promise.finally(onfinally)
   }
 
+  public resolve(value?: T | PromiseLike<T>): void {
+    return this.resolve_(value)
+  }
+
+  public reject(reason?: any): void {
+    return this.reject_(reason)
+  }
+
   /**
    * Cancel the promise
    */
@@ -121,13 +189,17 @@ export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResp
    * @param cancelTokenSource [CancelTokenSource] optional
    */
   constructor(config: AxiosRequestConfig, axiosInstance: AxiosInstance = axios.create(), private readonly cancelTokenSource = axios.CancelToken.source()) {
-    super((resolve, reject) => {
-      axiosInstance.request({
-        ...config,
-        cancelToken: cancelTokenSource.token,
-      })
-        .then(response => response ? resolve(response) : reject(new CancelError()))
-        .catch(e => reject(e.constructor.name === 'Cancel' ? new CancelError() : e))
+    super(async (resolve, reject) => {
+      try {
+        const response = await axiosInstance.request({
+          ...config,
+          cancelToken: cancelTokenSource.token,
+        })
+        return response ? resolve(response) : reject(new CancelError())
+      }
+      catch (e) {
+        return reject(e.constructor.name === 'Cancel' ? new CancelError() : e)
+      }
     })
   }
 
@@ -137,5 +209,3 @@ export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResp
     this.emit('cancel')
   }
 }
-
-export { CancelError } from './error'
