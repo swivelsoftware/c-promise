@@ -1,7 +1,22 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import EventEmitter from 'wolfy87-eventemitter'
-import { CancelError } from './error'
-import { sleep } from './sleep'
+
+/**
+ * Throw when promise is canceled
+ */
+export class CancelError extends Error {
+  constructor() {
+    super('CANCELED')
+  }
+}
+
+/**
+ * Sleep for a period of time
+ * @param time [number] optional
+ */
+export function sleep(time = 0): Promise<void> {
+  return new Promise(resolve => setTimeout(() => resolve(), time))
+}
 
 /**
  * Promise function for cancelable promise
@@ -194,6 +209,3 @@ export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResp
     this.emit('cancel')
   }
 }
-
-export { CancelError } from './error'
-export { sleep } from './sleep'

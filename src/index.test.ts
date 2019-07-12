@@ -1,5 +1,4 @@
-import { CancelableAxiosPromise, CancelablePromise } from '.'
-import { CancelError } from './error'
+import { CancelableAxiosPromise, CancelablePromise, CancelError } from '.'
 
 function asyncTask(check: () => void): Promise<void> {
   return new Promise((resolve, reject) => {
