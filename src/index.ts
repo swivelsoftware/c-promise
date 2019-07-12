@@ -1,16 +1,17 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import EventEmitter from 'wolfy87-eventemitter'
 import { CancelError } from './error'
+import { sleep } from './sleep'
 
 /**
  * Promise function for cancelable promise
  */
-export type HandlePromiseFn<T> = (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void|Promise<void>
+export type HandlePromiseFn<T> = (resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
 
 /**
  * Promise function in case overriding a cancelable promise
  */
-export type OverridePromiseFn<T, U> = (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void|Promise<void>
+export type OverridePromiseFn<T, U> = (promise: CancelablePromise<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
 
 /**
  * Create function in case overriding a cancelable promise
@@ -21,7 +22,7 @@ export type CreatePromiseFn<T> = () => CancelablePromise<T>
 /**
  * Promise function in case overriding a cancelable promise
  */
-export type OverrideCreatePromiseFn<T, U> = (createPromise: CreatePromiseFn<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => void, canceled: () => void) => void|Promise<void>
+export type OverrideCreatePromiseFn<T, U> = (createPromise: CreatePromiseFn<U>, resolve: (value?: T | PromiseLike<T>) => void, reject: (reason?: any) => void, check: () => Promise<void>, canceled: () => void) => void|Promise<void>
 
 /**
  * Promise than can be canceled
@@ -68,7 +69,8 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
             },
             resolve,
             reject,
-            () => {
+            async () => {
+              await sleep()
               if (this.canceled) throw new CancelError()
             },
             () => this.emit('canceled'),
@@ -90,7 +92,8 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
             promise,
             resolve,
             reject,
-            () => {
+            async () => {
+              await sleep()
               if (this.canceled) throw new CancelError()
             },
             () => this.emit('canceled'),
@@ -109,6 +112,7 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
           this.reject_ = reject
           await fn(resolve, reject,
             async () => {
+              await sleep()
               if (this.canceled) throw new CancelError()
             },
             () => this.emit('canceled'),
@@ -192,3 +196,4 @@ export class CancelableAxiosPromise<T = any> extends CancelablePromise<AxiosResp
 }
 
 export { CancelError } from './error'
+export { sleep } from './sleep'
