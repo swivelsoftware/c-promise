@@ -85,7 +85,6 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
             resolve,
             reject,
             async () => {
-              await sleep()
               if (this.canceled) throw new CancelError()
             },
             () => this.emit('canceled'),
@@ -108,7 +107,6 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
             resolve,
             reject,
             async () => {
-              await sleep()
               if (this.canceled) throw new CancelError()
             },
             () => this.emit('canceled'),
@@ -127,7 +125,6 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
           this.reject_ = reject
           await fn(resolve, reject,
             async () => {
-              await sleep()
               if (this.canceled) throw new CancelError()
             },
             () => this.emit('canceled'),

@@ -1,6 +1,6 @@
 {
   "name": "@kennysng/c-promise",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Cancelable Promise",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,7 +10,7 @@
     "build": "npm run lint && tsc && ts-node script/remove-tsd",
     "prepublishOnly": "npm i && npm run build",
     "dist": "npm publish --access=public",
-    "postpublish": "rm package-lock.json && rimraf dist"
+    "postpublish": "rm package-lock.json && rm -rf dist"
   },
   "repository": {
     "type": "git",
@@ -28,21 +28,20 @@
   "devDependencies": {
     "@types/event-stream": "^3.3.34",
     "@types/minimist": "^1.2.0",
-    "@types/jest": "^24.0.15",
-    "@types/node": "^12.6.2",
+    "@types/jest": "^24.0.18",
+    "@types/node": "^12.7.8",
     "@types/recursive-readdir": "^2.2.0",
     "event-stream": "^4.0.1",
-    "jest": "^24.8.0",
+    "jest": "^24.9.0",
     "minimist": "^1.2.0",
     "recursive-readdir": "^2.2.2",
-    "rimraf": "^2.6.3",
-    "ts-jest": "^24.0.2",
-    "ts-node": "^8.3.0",
-    "tslint": "^5.18.0",
-    "typescript": "^3.5.3"
+    "ts-jest": "^24.1.0",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.3"
   },
   "dependencies": {
     "axios": "^0.19.0",
-    "wolfy87-eventemitter": "^5.2.6"
+    "wolfy87-eventemitter": "^5.2.8"
   }
 }
