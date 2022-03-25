@@ -150,7 +150,7 @@ export class CancelablePromise<T = any, U = any> extends EventEmitter implements
   }
 
   // @override
-  public catch(onRejected?: (reason: any) => PromiseLike<never>): Promise<T> {
+  public catch(onRejected?: (reason: any) => any|PromiseLike<any>): Promise<T> {
     return this.promise.catch(onRejected)
   }
 
