@@ -1,6 +1,6 @@
 {
-  "name": "@kennysng/c-promise",
   "version": "2.2.0",
+  "name": "@swivel-admin/c-promise",
   "description": "Cancelable Promise",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
