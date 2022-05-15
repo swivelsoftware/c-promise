@@ -568,12 +568,12 @@
   "resolved" "https://registry.npmjs.org/aws4/-/aws4-1.8.0.tgz"
   "version" "1.8.0"
 
-"axios@^0.21.1":
-  "integrity" "sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg=="
-  "resolved" "https://registry.npmjs.org/axios/-/axios-0.21.4.tgz"
-  "version" "0.21.4"
+"axios@^0.26.1":
+  "integrity" "sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA=="
+  "resolved" "https://registry.npmjs.org/axios/-/axios-0.26.1.tgz"
+  "version" "0.26.1"
   dependencies:
-    "follow-redirects" "^1.14.0"
+    "follow-redirects" "^1.14.8"
 
 "babel-jest@^24.9.0":
   "integrity" "sha512-ntuddfyiN+EhMw58PTNL1ph4C9rECiQXjI4nMMBKBaNjXvqLdkXpPRcMSr4iyBrJg/+wz9brFUD6RhOAT6r4Iw=="
@@ -1221,7 +1221,7 @@
   dependencies:
     "locate-path" "^3.0.0"
 
-"follow-redirects@^1.14.0":
+"follow-redirects@^1.14.8":
   "integrity" "sha512-aExlJShTV4qOUOL7yF1U5tvLCB0xQuudbf6toyYA0E/acBNw71mvjFTnLaRp50aQaYocMR0a/RMMBIHeZnGyjQ=="
   "resolved" "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.0.tgz"
   "version" "1.15.0"
